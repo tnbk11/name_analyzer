@@ -1,162 +1,46 @@
-body {
-    font-family: 'Nanum Gothic', sans-serif;
-    background-color: #f5f5f5;
-    color: #333;
-    line-height: 1.6;
-    margin: 0;
-    padding: 20px;
-}
+/* 기존 CSS 유지하면서 추가된 스타일 */
 
-.container {
-    max-width: 800px;
-    margin: 0 auto;
-    background-color: white;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-}
-
-h1 {
-    color: #333;
-    text-align: center;
-    margin-bottom: 30px;
-    font-size: 2.2em;
-}
-
-.intro {
-    background-color: #f9f9f9;
-    padding: 15px;
-    border-radius: 5px;
-    margin-bottom: 25px;
-    font-size: 0.95em;
-    border-left: 4px solid #4a90e2;
-}
-
-label {
-    display: block;
-    margin-bottom: 10px;
-    font-weight: bold;
-}
-
-input[type="text"] {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 20px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box;
-    font-size: 1em;
-}
-
-button {
-    background-color: #4a90e2;
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1em;
-    font-weight: bold;
-    transition: background-color 0.3s;
-}
-
-button:hover {
-    background-color: #357abd;
-}
-
-button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-}
-
-.loading {
-    text-align: center;
-    margin: 20px 0;
-    display: none;
-}
-
-.loading i {
-    color: #4a90e2;
-    font-size: 2em;
-    animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.result {
-    margin-top: 30px;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 5px;
-    display: none;
-}
-
-.character-analysis {
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #eee;
-}
-
-.character-analysis h3 {
-    color: #4a90e2;
-    margin-bottom: 10px;
-}
-
-.full-name-analysis {
+/* 결과 스타일 개선 */
+.full-name-analysis p {
     line-height: 1.8;
+    white-space: pre-line; /* 줄바꿈 유지 */
 }
 
-.full-name-analysis h2 {
-    color: #333;
-    text-align: center;
-    margin-bottom: 15px;
+/* 항목 구분 마커 스타일 개선 */
+.full-name-analysis ul {
+    padding-left: 20px;
+    margin-bottom: 20px;
 }
 
-.error {
-    color: #d9534f;
-    margin-top: 10px;
+.full-name-analysis li {
+    margin-bottom: 10px;
+    list-style-type: disc;
+}
+
+/* 항목 제목 스타일 */
+.full-name-analysis strong {
+    color: #4a90e2;
+    display: block;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+}
+
+/* 결과 컨테이너 여백 조정 */
+.result {
+    padding: 25px;
+}
+
+/* 전체 이름 해석 섹션 스타일 */
+.full-name-analysis {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* 이름 강조 스타일 */
+.name-highlight {
     font-weight: bold;
-    text-align: center;
-}
-
-.examples {
-    margin-top: 25px;
-    padding: 15px;
-    background-color: #f5f7fa;
-    border-radius: 5px;
-    font-size: 0.9em;
-}
-
-.examples h3 {
-    margin-top: 0;
-    color: #555;
-}
-
-footer {
-    text-align: center;
-    margin-top: 40px;
-    color: #777;
-    font-size: 0.9em;
-}
-
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-    .container {
-        padding: 20px;
-    }
-    
-    h1 {
-        font-size: 1.8em;
-    }
-    
-    input[type="text"] {
-        padding: 10px;
-    }
-    
-    button {
-        width: 100%;
-    }
+    color: #4a90e2;
 }
