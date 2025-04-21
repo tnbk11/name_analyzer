@@ -387,9 +387,7 @@ function updateURLWithAnalysis(name, analysis) {
         // 전체 이름 분석 표시 + 면책 문구 추가
         fullNameAnalysis.innerHTML = `
             <p>${results.fullNameAnalysis}</p>
-            <div class="disclaimer">
-                <p>이름 해석은 재미로만 봐주세요! 맞으면 다행, 틀려도 제 탓 아님 😎</p>
-            </div>
+
         `;
         
         // 결과 섹션까지 스크롤
