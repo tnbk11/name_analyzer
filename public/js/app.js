@@ -92,33 +92,44 @@ document.addEventListener('DOMContentLoaded', function() {
     function checkURLParameters() {
         const urlParams = new URLSearchParams(window.location.search);
         const name = urlParams.get('name');
-        const analysis = urlParams.get('analysis');
         
-        if (name && analysis) {
+        if (name) {
             try {
-                // URL 디코딩 및 JSON 파싱
-                const decodedAnalysis = JSON.parse(decodeURIComponent(analysis));
+                // 이름으로 세션 스토리지에서 분석 데이터 검색
+                const savedAnalysis = sessionStorage.getItem('currentAnalysis');
+                const savedName = sessionStorage.getItem('currentName');
                 
-                // 입력창에 이름 설정
-                nameInput.value = name;
-                
-                // 분석 데이터 저장
-                currentAnalysisData = decodedAnalysis;
-                
-                // 한자음 결합
-                const nameParts = name.split(' ');
-                currentNameSounds = nameParts.map(part => part.slice(-1)).join('');
-                
-                // 분석 결과 표시
-                displayAnalysisResults(decodedAnalysis, nameParts);
-                
-                // 결과 섹션 표시
-                resultSection.style.display = 'block';
-                
-                // 결과 섹션으로 스크롤
-                setTimeout(() => {
-                    resultSection.scrollIntoView({ behavior: 'smooth' });
-                }, 500);
+                // 저장된 분석 데이터가 있을 경우 사용
+                if (savedAnalysis && savedName === name) {
+                    const analysisData = JSON.parse(savedAnalysis);
+                    
+                    // 입력창에 이름 설정
+                    nameInput.value = name;
+                    
+                    // 분석 데이터 저장
+                    currentAnalysisData = analysisData;
+                    
+                    // 한자음 결합
+                    const nameParts = name.split(' ');
+                    currentNameSounds = nameParts.map(part => part.slice(-1)).join('');
+                    
+                    // 분석 결과 표시
+                    displayAnalysisResults(analysisData, nameParts);
+                    
+                    // 결과 섹션 표시
+                    resultSection.style.display = 'block';
+                    
+                    // 결과 섹션으로 스크롤
+                    setTimeout(() => {
+                        resultSection.scrollIntoView({ behavior: 'smooth' });
+                    }, 500);
+                } else {
+                    // 저장된 데이터가 없으면 이름만 입력창에 설정
+                    nameInput.value = name;
+                    
+                    // 자동으로 분석 실행
+                    analyzeBtn.click();
+                }
             } catch (error) {
                 console.error('URL 파라미터 처리 오류:', error);
             }
@@ -130,22 +141,54 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // URL 업데이트 함수
     function updateURLWithAnalysis(name, analysis) {
-        // 간단한 버전의 분석 데이터 생성 (공유용)
-        const shareableAnalysis = {
-            fullNameAnalysis: analysis.fullNameAnalysis
-        };
+        // 분석 데이터 전체를 URL에 담지 않고, 
+        // 화면에 표시된 내용만 짧게 요약하여 저장합니다
+        
+        // 이름 추출
+        const nameParts = name.split(' ');
+        const nameSound = nameParts.map(part => part.slice(-1)).join('');
         
         // URL 객체 생성
         const url = new URL(window.location.origin + window.location.pathname);
         
         // 파라미터 추가
         url.searchParams.set('name', name);
-        url.searchParams.set('analysis', encodeURIComponent(JSON.stringify(shareableAnalysis)));
+        url.searchParams.set('user', nameSound); // 이름 한글자만 저장
         
         // URL 업데이트 (페이지 새로고침 없이)
-        window.history.pushState({}, '', url);
+        window.history.pushState({name: name, analysis: analysis}, '', url);
+        
+        // 세션 스토리지에 분석 데이터 저장 (URL에는 저장하지 않음)
+        sessionStorage.setItem('currentAnalysis', JSON.stringify(analysis));
+        sessionStorage.setItem('currentName', name);
+        
+        // 메타 태그 업데이트
+        updateMetaTags(nameSound, analysis);
         
         return url.toString();
+    }
+    
+    // 메타 태그 업데이트 함수
+    function updateMetaTags(nameSound, analysis) {
+        // 타이틀 변경
+        document.title = `${nameSound}님의 이름 해석 결과`;
+        
+        // 오픈그래프 메타태그 업데이트
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        if (ogTitle) {
+            ogTitle.setAttribute('content', `${nameSound}님의 이름 해석입니다`);
+        }
+        
+        // 설명 업데이트
+        const plainText = analysis.fullNameAnalysis
+            .replace(/\*\*/g, '')
+            .replace(/•/g, '')
+            .substring(0, 100) + '...';
+        
+        const ogDesc = document.querySelector('meta[property="og:description"]');
+        if (ogDesc) {
+            ogDesc.setAttribute('content', plainText);
+        }
     }
     
     // 카카오톡 공유 버튼 클릭 이벤트
@@ -159,7 +202,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const shareUrl = window.location.href;
         
         // 분석 내용에서 첫 100자 추출 (마크다운 태그 제거)
-        const descriptionText = currentAnalysisData.fullNameAnalysis
+        const analysisText = currentAnalysisData.fullNameAnalysis;
+        const plainText = analysisText
             .replace(/\*\*/g, '') // 볼드 태그 제거
             .replace(/•/g, '') // 불릿 포인트 제거
             .substring(0, 100) + '...';
@@ -169,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 objectType: 'feed',
                 content: {
                     title: `${currentNameSounds}님의 이름 해석입니다`,
-                    description: descriptionText,
+                    description: plainText,
                     imageUrl: 'https://your-site.com/images/og-image.jpg', // 실제 이미지 URL로 변경 필요
                     link: {
                         mobileWebUrl: shareUrl,
@@ -332,7 +376,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // OpenAI API 호출을 시뮬레이션하는 함수 (개발 환경용)
+    //
+// OpenAI API 호출을 시뮬레이션하는 함수 (개발 환경용)
     async function simulateAIAnalysis(nameInfo, fullName, fullMeanings) {
         // API 요청 시뮬레이션을 위한 지연
         await new Promise(resolve => setTimeout(resolve, 2000));
