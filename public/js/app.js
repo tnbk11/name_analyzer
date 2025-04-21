@@ -1,3 +1,42 @@
+// Firebase 데이터베이스 참조 가져오기
+const database = firebase.database();
+
+// 이름 해석 결과를 Firebase에 저장하는 함수
+function saveAnalysisToFirebase(name, analysis) {
+    // 고유 ID 생성
+    const analysisId = Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
+    
+    // Firebase에 저장
+    database.ref('analyses/' + analysisId).set({
+        name: name,
+        analysis: analysis,
+        timestamp: Date.now()
+    });
+    
+    console.log('Firebase에 저장 완료:', analysisId);
+    return analysisId;
+}
+
+// Firebase에서 이름 해석 결과를 가져오는 함수
+function loadAnalysisFromFirebase(analysisId) {
+    return new Promise((resolve, reject) => {
+        database.ref('analyses/' + analysisId).once('value')
+            .then((snapshot) => {
+                if (snapshot.exists()) {
+                    console.log('Firebase에서 데이터 로드 성공');
+                    resolve(snapshot.val());
+                } else {
+                    console.log('Firebase에 해당 ID의 데이터 없음');
+                    reject(new Error('분석 결과를 찾을 수 없습니다.'));
+                }
+            })
+            .catch((error) => {
+                console.error('Firebase 로드 오류:', error);
+                reject(error);
+            });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const analyzeBtn = document.getElementById('analyzeBtn');
     const nameInput = document.getElementById('nameInput');
@@ -88,85 +127,95 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // URL에서 파라미터 확인 및 처리
-    function checkURLParameters() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const name = urlParams.get('name');
+// URL에서 파라미터 확인 및 처리
+function checkURLParameters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const analysisId = urlParams.get('id');
+    const name = urlParams.get('name');
+    
+    if (analysisId) {
+        console.log('URL에서 분석 ID 발견:', analysisId);
         
-        if (name) {
-            try {
-                // 이름으로 세션 스토리지에서 분석 데이터 검색
-                const savedAnalysis = sessionStorage.getItem('currentAnalysis');
-                const savedName = sessionStorage.getItem('currentName');
+        // 로딩 표시
+        loadingIndicator.style.display = 'block';
+        
+        // Firebase에서 데이터 로드 시도
+        loadAnalysisFromFirebase(analysisId)
+            .then((data) => {
+                console.log('Firebase에서 데이터 로드됨');
                 
-                // 저장된 분석 데이터가 있을 경우 사용
-                if (savedAnalysis && savedName === name) {
-                    const analysisData = JSON.parse(savedAnalysis);
-                    
-                    // 입력창에 이름 설정
+                // 입력창에 이름 설정
+                nameInput.value = data.name;
+                
+                // 분석 데이터 저장
+                currentAnalysisData = data.analysis;
+                
+                // 한자음 결합
+                const nameParts = data.name.split(' ');
+                currentNameSounds = nameParts.map(part => part.slice(-1)).join('');
+                
+                // 분석 결과 표시
+                displayAnalysisResults(data.analysis, nameParts);
+                
+                // 로딩 숨기기
+                loadingIndicator.style.display = 'none';
+                
+                // 결과 섹션 표시
+                resultSection.style.display = 'block';
+                
+                // 결과 섹션으로 스크롤
+                setTimeout(() => {
+                    resultSection.scrollIntoView({ behavior: 'smooth' });
+                }, 500);
+            })
+            .catch((error) => {
+                console.error('Firebase 데이터 로드 오류:', error);
+                loadingIndicator.style.display = 'none';
+                
+                // ID로 로드 실패 시 name 파라미터로 시도
+                if (name) {
                     nameInput.value = name;
-                    
-                    // 분석 데이터 저장
-                    currentAnalysisData = analysisData;
-                    
-                    // 한자음 결합
-                    const nameParts = name.split(' ');
-                    currentNameSounds = nameParts.map(part => part.slice(-1)).join('');
-                    
-                    // 분석 결과 표시
-                    displayAnalysisResults(analysisData, nameParts);
-                    
-                    // 결과 섹션 표시
-                    resultSection.style.display = 'block';
-                    
-                    // 결과 섹션으로 스크롤
-                    setTimeout(() => {
-                        resultSection.scrollIntoView({ behavior: 'smooth' });
-                    }, 500);
-                } else {
-                    // 저장된 데이터가 없으면 이름만 입력창에 설정
-                    nameInput.value = name;
-                    
-                    // 자동으로 분석 실행
                     analyzeBtn.click();
                 }
-            } catch (error) {
-                console.error('URL 파라미터 처리 오류:', error);
-            }
-        }
+            });
+    } else if (name) {
+        // 기존 name 파라미터 처리
+        nameInput.value = name;
+        analyzeBtn.click();
     }
+}
     
     // 페이지 로드 시 URL 파라미터 확인
     checkURLParameters();
     
-    // URL 업데이트 함수
-    function updateURLWithAnalysis(name, analysis) {
-        // 분석 데이터 전체를 URL에 담지 않고, 
-        // 화면에 표시된 내용만 짧게 요약하여 저장합니다
-        
-        // 이름 추출
-        const nameParts = name.split(' ');
-        const nameSound = nameParts.map(part => part.slice(-1)).join('');
-        
-        // URL 객체 생성
-        const url = new URL(window.location.origin + window.location.pathname);
-        
-        // 파라미터 추가
-        url.searchParams.set('name', name);
-        url.searchParams.set('user', nameSound); // 이름 한글자만 저장
-        
-        // URL 업데이트 (페이지 새로고침 없이)
-        window.history.pushState({name: name, analysis: analysis}, '', url);
-        
-        // 세션 스토리지에 분석 데이터 저장 (URL에는 저장하지 않음)
-        sessionStorage.setItem('currentAnalysis', JSON.stringify(analysis));
-        sessionStorage.setItem('currentName', name);
-        
-        // 메타 태그 업데이트
-        updateMetaTags(nameSound, analysis);
-        
-        return url.toString();
-    }
+// URL 업데이트 함수
+function updateURLWithAnalysis(name, analysis) {
+    // 한자음 결합
+    const nameParts = name.split(' ');
+    const nameSound = nameParts.map(part => part.slice(-1)).join('');
+    
+    // Firebase에 저장하고 ID 받기
+    const analysisId = saveAnalysisToFirebase(name, analysis);
+    
+    // URL 객체 생성
+    const url = new URL(window.location.origin + window.location.pathname);
+    
+    // 파라미터 추가
+    url.searchParams.set('id', analysisId);
+    url.searchParams.set('user', nameSound);
+    
+    // URL 업데이트 (페이지 새로고침 없이)
+    window.history.pushState({id: analysisId}, '', url);
+    
+    // 세션 스토리지에도 백업으로 저장 (옵션)
+    sessionStorage.setItem('currentAnalysis', JSON.stringify(analysis));
+    sessionStorage.setItem('currentName', name);
+    
+    // 메타태그 업데이트
+    updateMetaTags(nameSound, analysis);
+    
+    return url.toString();
+}
     
     // 메타 태그 업데이트 함수
     function updateMetaTags(nameSound, analysis) {
