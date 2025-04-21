@@ -335,3 +335,66 @@ footer {
     box-sizing: border-box;
     padding: 15px;
 }
+
+/* 결과 섹션 스타일 개선 */
+.result {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 20px;
+    margin-top: 30px;
+}
+
+.full-name-analysis {
+    background-color: #ffffff !important;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+/* 항목 구분 및 간격 */
+.full-name-analysis p {
+    white-space: pre-line;
+    line-height: 1.8;
+    word-break: break-word;
+}
+
+/* 볼드체 제목 스타일링 */
+.full-name-analysis strong,
+.full-name-analysis b {
+    display: block;
+    margin-top: 25px;
+    margin-bottom: 12px;
+    color: #2e7d32;
+    font-size: 1.1em;
+}
+
+/* 첫 번째 제목은 위 여백 제거 */
+.full-name-analysis p strong:first-child,
+.full-name-analysis p b:first-child {
+    margin-top: 0;
+}
+
+/* 모바일 화면 최적화 */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        margin: 0;
+    }
+    
+    body {
+        padding: 0;
+    }
+    
+    .result {
+        padding: 15px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .full-name-analysis {
+        padding: 15px;
+    }
+}
