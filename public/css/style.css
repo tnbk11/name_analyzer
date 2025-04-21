@@ -227,3 +227,76 @@ footer {
     border-radius: 20px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
+
+/* 공유 버튼 스타일 */
+.share-buttons {
+    margin-top: 30px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.share-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.kakao-btn {
+    background-color: #FEE500;
+    color: #000000;
+}
+
+.kakao-btn:hover {
+    background-color: #F2D900;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.kakao-btn img {
+    height: 20px;
+    margin-right: 8px;
+}
+
+.link-btn {
+    background-color: #43a047;
+    color: white;
+}
+
+.link-btn:hover {
+    background-color: #2e7d32;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.link-btn i {
+    margin-right: 8px;
+}
+
+.link-copied-msg {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(67, 160, 71, 0.9);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.link-copied-msg.show {
+    opacity: 1;
+}
