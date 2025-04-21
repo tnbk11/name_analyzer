@@ -6,6 +6,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const characterAnalyses = document.getElementById('characterAnalyses');
     const fullNameAnalysis = document.getElementById('fullNameAnalysis');
     const errorMsg = document.getElementById('errorMsg');
+    const kakaoShareBtn = document.getElementById('kakaoShareBtn');
+    const copyLinkBtn = document.getElementById('copyLinkBtn');
+    const linkCopiedMsg = document.getElementById('linkCopiedMsg');
+    
+    // 카카오 SDK 초기화 (자신의 앱 키로 변경 필요)
+    try {
+        Kakao.init('YOUR_KAKAO_APP_KEY'); // 실제 서비스에서는 본인의 카카오 개발자 앱 키로 교체
+        console.log('Kakao SDK initialized');
+    } catch (error) {
+        console.error('Kakao SDK initialization failed:', error);
+    }
+    
+    // 분석 결과 데이터 저장 변수
+    let currentAnalysisData = null;
+    let currentNameSounds = '';
     
     // 서버 API 엔드포인트
     const API_ENDPOINT = '/api/analyze-name';
@@ -41,8 +56,17 @@ document.addEventListener('DOMContentLoaded', function() {
             // AI를 통한 이름 분석 요청
             const analysisResults = await analyzeNameWithAI(nameParts);
             
+            // 분석 데이터 저장
+            currentAnalysisData = analysisResults;
+            
+            // 한자음 결합
+            currentNameSounds = nameParts.map(part => part.slice(-1)).join('');
+            
             // 분석 결과 표시
             displayAnalysisResults(analysisResults, nameParts);
+            
+            // URL 파라미터 업데이트
+            updateURLWithAnalysis(nameValue, analysisResults);
             
             // 로딩 숨기고 결과 표시
             loadingIndicator.style.display = 'none';
@@ -62,6 +86,141 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Enter') {
             analyzeBtn.click();
         }
+    });
+    
+    // URL에서 파라미터 확인 및 처리
+    function checkURLParameters() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const name = urlParams.get('name');
+        const analysis = urlParams.get('analysis');
+        
+        if (name && analysis) {
+            try {
+                // URL 디코딩 및 JSON 파싱
+                const decodedAnalysis = JSON.parse(decodeURIComponent(analysis));
+                
+                // 입력창에 이름 설정
+                nameInput.value = name;
+                
+                // 분석 데이터 저장
+                currentAnalysisData = decodedAnalysis;
+                
+                // 한자음 결합
+                const nameParts = name.split(' ');
+                currentNameSounds = nameParts.map(part => part.slice(-1)).join('');
+                
+                // 분석 결과 표시
+                displayAnalysisResults(decodedAnalysis, nameParts);
+                
+                // 결과 섹션 표시
+                resultSection.style.display = 'block';
+                
+                // 결과 섹션으로 스크롤
+                setTimeout(() => {
+                    resultSection.scrollIntoView({ behavior: 'smooth' });
+                }, 500);
+            } catch (error) {
+                console.error('URL 파라미터 처리 오류:', error);
+            }
+        }
+    }
+    
+    // 페이지 로드 시 URL 파라미터 확인
+    checkURLParameters();
+    
+    // URL 업데이트 함수
+    function updateURLWithAnalysis(name, analysis) {
+        // 간단한 버전의 분석 데이터 생성 (공유용)
+        const shareableAnalysis = {
+            fullNameAnalysis: analysis.fullNameAnalysis
+        };
+        
+        // URL 객체 생성
+        const url = new URL(window.location.origin + window.location.pathname);
+        
+        // 파라미터 추가
+        url.searchParams.set('name', name);
+        url.searchParams.set('analysis', encodeURIComponent(JSON.stringify(shareableAnalysis)));
+        
+        // URL 업데이트 (페이지 새로고침 없이)
+        window.history.pushState({}, '', url);
+        
+        return url.toString();
+    }
+    
+    // 카카오톡 공유 버튼 클릭 이벤트
+    kakaoShareBtn.addEventListener('click', function() {
+        if (!currentAnalysisData || !currentNameSounds) {
+            alert('먼저 이름을 분석해주세요.');
+            return;
+        }
+        
+        // 공유할 URL 생성
+        const shareUrl = window.location.href;
+        
+        // 분석 내용에서 첫 100자 추출 (마크다운 태그 제거)
+        const descriptionText = currentAnalysisData.fullNameAnalysis
+            .replace(/\*\*/g, '') // 볼드 태그 제거
+            .replace(/•/g, '') // 불릿 포인트 제거
+            .substring(0, 100) + '...';
+        
+        try {
+            Kakao.Link.sendDefault({
+                objectType: 'feed',
+                content: {
+                    title: `${currentNameSounds}님의 이름 해석입니다`,
+                    description: descriptionText,
+                    imageUrl: 'https://your-site.com/images/og-image.jpg', // 실제 이미지 URL로 변경 필요
+                    link: {
+                        mobileWebUrl: shareUrl,
+                        webUrl: shareUrl
+                    }
+                },
+                buttons: [
+                    {
+                        title: '자세히 보기',
+                        link: {
+                            mobileWebUrl: shareUrl,
+                            webUrl: shareUrl
+                        }
+                    },
+                    {
+                        title: '나도 분석하기',
+                        link: {
+                            mobileWebUrl: window.location.origin + window.location.pathname,
+                            webUrl: window.location.origin + window.location.pathname
+                        }
+                    }
+                ]
+            });
+        } catch (error) {
+            console.error('카카오 공유 오류:', error);
+            alert('카카오톡 공유 기능을 사용할 수 없습니다. 링크 복사를 이용해주세요.');
+        }
+    });
+    
+    // 링크 복사 버튼 클릭 이벤트
+    copyLinkBtn.addEventListener('click', function() {
+        if (!currentAnalysisData) {
+            alert('먼저 이름을 분석해주세요.');
+            return;
+        }
+        
+        // 현재 URL 복사
+        const shareUrl = window.location.href;
+        
+        navigator.clipboard.writeText(shareUrl)
+            .then(() => {
+                // 복사 성공 메시지 표시
+                linkCopiedMsg.classList.add('show');
+                setTimeout(() => {
+                    linkCopiedMsg.classList.remove('show');
+                }, 2000);
+            })
+            .catch(err => {
+                console.error('링크 복사 오류:', err);
+                alert('링크 복사에 실패했습니다. 직접 URL을 복사해주세요.');
+            });
     });
     
     // OpenAI API를 사용하여 이름 분석
