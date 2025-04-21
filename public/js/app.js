@@ -80,6 +80,27 @@ document.addEventListener('DOMContentLoaded', function() {
             errorMsg.textContent = '올바른 형식으로 입력해주세요.';
             return;
         }
+
+    // 각 부분에 띄어쓰기가 있는지 검사
+    for (const part of nameParts) {
+        // 한자뜻과 한자음이 띄어쓰기로 분리되었는지 검사
+        if (/\s/.test(part)) {
+            errorMsg.textContent = '한자뜻과 한자음을 붙여서 표기해주세요. 예: 쇠김 물수 남쪽남';
+            return;
+        }
+        
+        // 특수문자 검사 (쉼표, 마침표 등)
+        if (/[,\.;:!@#$%^&*()_\-+=\[\]{}|\\/<>?]/.test(part)) {
+            errorMsg.textContent = '글자사이에 특수문자를 삭제해 주세요. 예: 쇠김 물수 남쪽남';
+            return;
+        }
+        
+        // 각 부분이 한글자 이상인지 확인 (한자뜻 + 한자음)
+        if (part.length < 2) {
+            errorMsg.textContent = '한자뜻과 한자음을 모두 입력해주세요. 예: 쇠김 물수 남쪽남';
+            return;
+        }
+    }
         
         // 오류 메시지 초기화
         errorMsg.textContent = '';
