@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 각 부분이 한글자 이상인지 확인 (한자뜻 + 한자음)
         if (part.length < 2) {
-            errorMsg.textContent = '한자뜻과 한자음을 모두 입력해주세요. 예: 쇠김 물수 남쪽남';
+            errorMsg.textContent = '한자뜻과 한자음을 모두 입력해주세요. 또는 한자뜻과 한자음사이에 빈칸없이 작성해주세요. 예: 쇠김 물수 남쪽남';
             return;
         }
     }
