@@ -379,16 +379,27 @@ function updateURLWithAnalysis(name, analysis) {
         }
     }
     
-    // AI 분석 결과를 표시하는 함수
-    function displayAnalysisResults(results, nameParts) {
-        // 문자 분석 섹션은 숨김 처리
-        characterAnalyses.style.display = 'none';
-        
-        // 전체 이름 분석 표시 + 면책 문구 추가
-        fullNameAnalysis.innerHTML = `
-            <p>${results.fullNameAnalysis}</p>
-
-        `;
+// AI 분석 결과를 표시하는 함수
+function displayAnalysisResults(results, nameParts) {
+    // 문자 분석 섹션은 숨김 처리
+    characterAnalyses.style.display = 'none';
+    
+    // 마크다운 **텍스트**를 <strong>텍스트</strong>로 변환
+    let formattedAnalysis = results.fullNameAnalysis.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    
+    // 이름에서 한자음만 추출하여 표시
+    const nameSound = nameParts.map(part => part.slice(-1)).join('');
+    
+    // 제목 부분 업데이트
+    const resultTitle = document.querySelector('.full-name-analysis h2');
+    if (resultTitle) {
+        resultTitle.textContent = `${nameSound}님의 이름 해석`;
+    }
+    
+    // 전체 이름 분석만 표시
+    fullNameAnalysis.innerHTML = `
+        <p>${formattedAnalysis}</p>
+    `;
         
         // 결과 섹션까지 스크롤
         resultSection.scrollIntoView({ behavior: 'smooth' });
