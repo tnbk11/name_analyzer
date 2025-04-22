@@ -5,17 +5,61 @@ const database = firebase.database();
 function saveAnalysisToFirebase(name, analysis) {
     // 고유 ID 생성
     const analysisId = Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
+
+    // 저장 시간과 만료 시간 설정
+    const timestamp = Date.now();
+    const expiresAt = timestamp + (3 * 24 * 60 * 60 * 1000); // 현재 + 3일
     
     // Firebase에 저장
     database.ref('analyses/' + analysisId).set({
         name: name,
         analysis: analysis,
         timestamp: Date.now()
+        expiresAt: expiresAt
     });
     
     console.log('Firebase에 저장 완료:', analysisId);
     return analysisId;
 }
+
+// 페이지 로드 시 만료된 항목 삭제
+function cleanupExpiredData() {
+    const now = Date.now();
+    
+    // 만료된 항목 찾기
+    database.ref('analyses')
+        .orderByChild('expiresAt')
+        .endAt(now)
+        .once('value')
+        .then((snapshot) => {
+            if (!snapshot.exists()) {
+                return;
+            }
+            
+            // 삭제할 항목에 대한 업데이트 객체 생성
+            const updates = {};
+            snapshot.forEach((child) => {
+                updates[child.key] = null;
+            });
+            
+            // 만료된 항목 삭제
+            database.ref('analyses').update(updates);
+            console.log('만료된 항목 삭제됨:', Object.keys(updates).length);
+        })
+        .catch((error) => {
+            console.error('만료 항목 삭제 오류:', error);
+        });
+}
+
+// 페이지 로드 시 실행
+document.addEventListener('DOMContentLoaded', function() {
+    // 기존 코드...
+    
+    // 만료된 데이터 정리
+    cleanupExpiredData();
+    
+    // 기존 코드...
+});
 
 // Firebase에서 이름 해석 결과를 가져오는 함수
 function loadAnalysisFromFirebase(analysisId) {
